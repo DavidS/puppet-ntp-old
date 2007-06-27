@@ -1,0 +1,20 @@
+Configures the ntp-server package to keep the local time synchronized.
+
+The "server" class targets the central time servers of a
+organisation or for single servers, directly synchronising to some online
+servers.
+
+The "client" class uses the defines "server"s to get the time, thereby
+not burdening the public servers further.
+
+Refer to http://www.eecis.udel.edu/~mills/ntp/html/notes.html for details
+pertaining to a efficient and robust NTP Subnet implementation.
+
+The upstream NTP servers are set by specifying them in an array called
+$ntp_servers. It is recommended to use a different set of upstreams for each
+"server". Are no upstreams specified, the Pool is used.
+
+The stratum of the local clock is set via the $ntp_local_stratum variable, which
+is 13 by default. One Server should have this set to a lower stratum to provide
+a stable fallback in case of catastropic connection loss.
+

@@ -1,0 +1,157 @@
+#!/usr/bin/perl -w
+#
+# Plugin to monitor NTP statistics
+#
+# Parameters understood:
+#
+# 	config   (required)
+# 	autoconf (optional - used by munin-node-configure)
+#       suggest  (optional - used by munin-node-configure)
+#
+# $Log$
+# Revision 1.4  2004/11/21 20:19:09  jimmyo
+# Don't suggest localhost peer.
+#
+# Revision 1.3  2004/11/21 20:12:32  jimmyo
+# Cosmetics.
+#
+# Revision 1.2  2004/11/21 19:55:28  jimmyo
+# Upped generic/ntp_ to auto family.
+#
+# Revision 1.1  2004/11/21 19:35:23  jimmyo
+# Corrected file name.
+#
+# Revision 1.2  2004/09/08 15:25:33  ilmari
+# Use /usr/bin/perl in all perl shebang lines.
+#
+# Revision 1.1  2004/01/30 15:07:38  jimmyo
+# Added generic plugins ntp_ and ntp_states to manual family (SF#887000).
+#
+#
+#
+#
+# Magic markers - optional - used by installation scripts and
+# munin-node-configure:
+#
+#%# family=auto
+#%# capabilities=autoconf suggest
+#
+
+use strict;
+use Net::hostent;
+use Socket;
+
+if ($ARGV[0] and $ARGV[0] eq "autoconf") {
+	`ntpq -c help >/dev/null 2>/dev/null`;
+	if ($? eq "0") {
+		if (`ntpq -c "hostnames no" -c peers | wc -l` > 0) {
+			print "yes\n";
+			exit 0;
+		} else {
+			print "no (unable to list peers)\n";
+			exit 1;
+		}
+	} else {
+		print "no (ntpq not found)\n";
+		exit 1;
+	}
+}
+
+if ($ARGV[0] and $ARGV[0] eq "suggest") {
+	my @lines = `ntpq -c "hostnames no" -c peers`;
+	foreach (@lines) {
+		next unless /^.(\d+\.\d+\.\d+\.\d+)/;
+		next if /^.224\.0\.1\.1/;
+		next if /^.127\./;
+		my $addr = $1;
+		my $name = gethostbyaddr(inet_aton($addr));
+		$name = defined $name ? $name->name : $addr;
+		print $name, "\n";
+	}
+	exit 0;
+}
+
+sub gethost_canon($)
+{
+	my $name = shift;
+	my $canon_name = gethost($name);
+	$canon_name = gethostbyaddr($canon_name->addr_list->[0]) if defined $canon_name;
+	$canon_name = (defined($canon_name) ? $canon_name->name : $name );
+	return $canon_name;
+}
+
+sub getaddr_canon($)
+{
+	my $name = shift;
+	return gethost($name)->addr_list->[0];
+}
+
+$0 =~ /ntp_(.+)*$/; 
+my $name = $1;
+exit 2 unless defined $name;
+my $index;
+if ($name =~ /^POOL_(\d+)$/)
+{
+	$index = $1;
+}
+my $canon_name = gethost_canon($name) if ! defined $index;
+my $canon_addr = getaddr_canon($name) if ! defined $index;
+exit 2 unless defined $index or defined $canon_name or defined $canon_addr;
+
+if ($ARGV[0] and $ARGV[0] eq "config") {
+	my @lines = `ntpq -c "hostnames no" -c peers`;
+	if (defined $index) {
+		print "graph_title NTP statistics for peer POOL#$index\n"
+	} else {
+		if ($canon_name eq $name) {
+			print "graph_title NTP statistics for peer $name\n";
+		} else {
+			print "graph_title NTP statistics for peer $name ($canon_name)\n";
+		}
+	}
+	print "graph_args --base 1000 --vertical-label sec --lower-limit 0\n";
+        print "delay.label Delay\n";
+        print "delay.draw LINE2\n";
+        print "offset.label Offset\n";
+        print "offset.draw LINE2\n";
+        print "jitter.label Jitter\n";
+        print "jitter.draw LINE2\n";
+        exit 0;
+}
+
+sub parse_line($)
+{
+	my $line = shift;
+	my @F = split ' ', $line;
+	return if $F[9] >= 4000;
+	$F[7] /= 1000.0;
+	$F[8] /= 1000.0;
+	$F[9] /= 1000.0;
+	print <<"EOT";
+delay.value $F[7]
+offset.value $F[8]
+jitter.value $F[9]
+EOT
+}
+
+
+my @lines = `ntpq -c "hostnames no" -c peers`;
+if (defined $index) {
+	parse_line($lines[$index+1]);
+} else {
+	foreach (@lines) {
+		
+		next unless /^.(\d+\.\d+\.\d+\.\d+)/;
+		next if /^.224\.0\.1\.1/;
+		next if /^.127\./;
+		my $addr = $1;
+		unless (inet_aton($addr) eq $canon_addr) {
+			my $host = gethost_canon($addr);
+			next unless $host eq $canon_name;
+		}
+		parse_line($_);
+	}
+}
+exit 0;
+
+# vim:syntax=perl
