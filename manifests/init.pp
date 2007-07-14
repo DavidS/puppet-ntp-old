@@ -7,9 +7,9 @@ $local_stratum = $ntp_local_stratum ? {
 	default => $ntp_local_stratum,
 }
 
-$base_dir = "/var/lib/puppet/modules/ntp"
+$ntp_base_dir = "/var/lib/puppet/modules/ntp"
 file {
-	$base_dir:
+	$ntp_base_dir:
 		ensure => directory,
 		source => "puppet://$servername/ntp/empty",
 		recurse => true, purge => true,
@@ -33,7 +33,7 @@ class ntp {
 
 	# various files and directories used by this module
 	file{
-		"${base_dir}/munin_plugin":
+		"${ntp_base_dir}/munin_plugin":
 			source => "puppet://$servername/ntp/ntp_",
 			mode => 0755, owner => root, group => root;
 	}
