@@ -2,23 +2,23 @@
 # Copyright (C) 2007 David Schmitt <david@schmitt.edv-bus.at>
 # See LICENSE for the full license granted to you.
 
-$local_stratum = $ntp_local_stratum ? {
-	'' => 13,
-	default => $ntp_local_stratum,
-}
-
 $ntp_base_dir = "/var/lib/puppet/modules/ntp"
 file {
 	$ntp_base_dir:
 		ensure => directory,
 		source => "puppet://$servername/ntp/empty",
-		recurse => true, purge => true,
+		recurse => true, purge => true, force => true,
 		mode => 0755, owner => root, group => root,
 }
 
 class ntp {
 
 	package { ntp : ensure => installed, before => File["/etc/ntp.conf"]}
+
+	$local_stratum = $ntp_local_stratum ? {
+		'' => 13,
+		default => $ntp_local_stratum,
+	}
 
 	config_file { "/etc/ntp.conf":
 		content => template("ntp/ntp.conf"),
