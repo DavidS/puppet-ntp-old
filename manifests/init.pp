@@ -84,6 +84,8 @@ class ntp {
 			file { "/var/lib/puppet/modules/ntp/ntp.client.d": ensure => directory, }
 			config_file { "/etc/ntp.client.conf": content => "\n", }
 
+			nagios2::service { "check_ntp": }
+
 		}
 	}
 
