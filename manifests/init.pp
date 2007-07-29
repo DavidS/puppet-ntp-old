@@ -36,11 +36,19 @@ class ntp {
 		"${ntp_base_dir}/munin_plugin":
 			source => "puppet://$servername/ntp/ntp_",
 			mode => 0755, owner => root, group => root;
+		"${ntp_base_dir}/create_munin_plugin":
+			source => "puppet://$servername/ntp/fix_munin",
+			mode => 0755, owner => root, group => root;
+	}
+
+	exec { "${ntp_base_dir}/create_munin_plugin":
+		require => Service[ntp],
+		before => File["/etc/munin/plugins"],
 	}
 
 	case $ntp_servers { 
 		'': { # this is a client, connect to our own servers
-			debug ( "${fqdn} will act as ntp client" )
+			info ( "${fqdn} will act as ntp client" )
 			# collect all our servers
 			concatenated_file { "/etc/ntp.client.conf":
 				dir => "/var/lib/puppet/modules/ntp/ntp.client.d",
@@ -52,7 +60,7 @@ class ntp {
 
 		}
 		default: { # this is a server, connect to the specified upstreams
-			debug ( "${fqdn} will act as ntp server using ${ntp_servers} as upstream" )
+			info ( "${fqdn} will act as ntp server using ${ntp_servers} as upstream" )
 			ntp::upstream_server { $ntp_servers: }
 			@@concatenated_file_part {
 				# export this server for our own clients

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+cd /etc/munin/plugins
+rm ntp_*
+for i in $(grep -hE '^(server|peer)' /etc/ntp.*.conf | cut -d ' ' -f 2)
+do
+	ln -s /var/lib/puppet/modules/ntp/munin_plugin ntp_$i
+done
+
