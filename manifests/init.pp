@@ -2,14 +2,9 @@
 # Copyright (C) 2007 David Schmitt <david@schmitt.edv-bus.at>
 # See LICENSE for the full license granted to you.
 
+modules_dir { "ntp": }
+	
 $ntp_base_dir = "/var/lib/puppet/modules/ntp"
-file {
-	$ntp_base_dir:
-		ensure => directory,
-		source => "puppet://$servername/ntp/empty",
-		recurse => true, purge => true, force => true,
-		mode => 0755, owner => root, group => root,
-}
 
 class ntp {
 
