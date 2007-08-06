@@ -51,6 +51,11 @@ class ntp {
 
 			# unused configs
 			file { "/var/lib/puppet/modules/ntp/ntp.server.d": ensure => directory, }
+			# provide dummy dependency for collected files
+			exec { "concat_/var/lib/puppet/modules/ntp/ntp.server.d":
+				command => "/bin/true",
+				refreshonly => true,
+			}
 			config_file { "/etc/ntp.server.conf": content => "\n", }
 
 		}
@@ -77,6 +82,11 @@ class ntp {
 				dir => "/var/lib/puppet/modules/ntp/ntp.server.d",
 			}
 			file { "/var/lib/puppet/modules/ntp/ntp.client.d": ensure => directory, }
+			# provide dummy dependency for collected files
+			exec { "concat_/var/lib/puppet/modules/ntp/ntp.client.d":
+				command => "/bin/true",
+				refreshonly => true,
+			}
 			config_file { "/etc/ntp.client.conf": content => "\n", }
 
 			nagios2::service { "check_ntp": }
