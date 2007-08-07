@@ -31,14 +31,16 @@ class ntp {
 		"${ntp_base_dir}/munin_plugin":
 			source => "puppet://$servername/ntp/ntp_",
 			mode => 0755, owner => root, group => root;
-		"${ntp_base_dir}/create_munin_plugin":
-			source => "puppet://$servername/ntp/fix_munin",
-			mode => 0755, owner => root, group => root;
 	}
 
-	exec { "${ntp_base_dir}/create_munin_plugin":
-		require => Service[ntp],
-		before => File["/etc/munin/plugins"],
+	puppet::fact { configured_ntp_servers:
+		source => "puppet://$servername/ntp/facter/configured_ntp_servers.rb"
+	}
+
+	$ntps = gsub(split($configured_ntp_servers, " "), "(.+)", "ntp_\\1")
+	munin::plugin { $ntps:
+		ensure => "ntp_",
+		script_path => $ntp_base_dir
 	}
 
 	case $ntp_servers { 
@@ -116,6 +118,7 @@ class ntp {
 			type => "server",
 		}
 		# This will need the ability to collect exported defines
+		# currently this is worked around by reading /etc/ntp*conf via a fact
 		# case $name { $fqdn: { debug ("${fqdn}: Ignoring get_time_from for self") } default: { munin_ntp { $name: } } }
 	}
 
