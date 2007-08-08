@@ -10,6 +10,6 @@ Facter.add("configured_ntp_servers") do
 					matches[2]
 				end
 			end
-		end.flatten.uniq.compact.join(" ")
+		end.flatten.uniq.compact.sort.join(" ")
 	end
 end
