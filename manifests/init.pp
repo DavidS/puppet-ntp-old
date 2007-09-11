@@ -20,7 +20,7 @@ class ntp {
 		require => Package[ntp];
 	}
 
-	service{ ntp:
+	service{ $lsbdistcodename ? { 'sarge' => 'ntp-server', default => 'ntp' }:
 		ensure => running,
 		pattern => ntpd,
 		subscribe => [ File["/etc/ntp.conf"], File["/etc/ntp.client.conf"], File["/etc/ntp.server.conf"] ],
