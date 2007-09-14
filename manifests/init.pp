@@ -5,10 +5,15 @@
 modules_dir { "ntp": }
 	
 $ntp_base_dir = "/var/lib/puppet/modules/ntp"
+$ntp_package = $lsbdistcodename ? { 'sarge' => 'ntp-server', default => 'ntp' }
 
 class ntp {
 
-	package { ntp : ensure => installed, before => File["/etc/ntp.conf"]}
+	package {
+		$ntp_package:
+			ensure => installed,
+			before => File["/etc/ntp.conf"]
+	}
 
 	$local_stratum = $ntp_local_stratum ? {
 		'' => 13,
@@ -17,10 +22,10 @@ class ntp {
 
 	config_file { "/etc/ntp.conf":
 		content => template("ntp/ntp.conf"),
-		require => Package[ntp];
+		require => Package[$ntp_package];
 	}
 
-	service{ $lsbdistcodename ? { 'sarge' => 'ntp-server', default => 'ntp' }:
+	service{ $ntp_package:
 		ensure => running,
 		pattern => ntpd,
 		subscribe => [ File["/etc/ntp.conf"], File["/etc/ntp.client.conf"], File["/etc/ntp.server.conf"] ],
