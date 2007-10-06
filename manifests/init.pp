@@ -38,10 +38,6 @@ class ntp {
 			mode => 0755, owner => root, group => root;
 	}
 
-	puppet::fact { configured_ntp_servers:
-		source => "puppet://$servername/ntp/facter/configured_ntp_servers.rb"
-	}
-
 	$ntps = gsub(split($configured_ntp_servers, " "), "(.+)", "ntp_\\1")
 	munin::plugin { $ntps:
 		ensure => "munin_plugin",
