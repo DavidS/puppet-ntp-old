@@ -1,4 +1,5 @@
-# return the set of active interfaces as an array
+# This fact returns the set of configured NTP servers
+# from the managed config files.
 Facter.add("configured_ntp_servers") do
 	setcode do
 		Dir.glob("/etc/ntp*.conf").collect do |name|
