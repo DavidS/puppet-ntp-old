@@ -96,6 +96,12 @@ class ntp {
 
 			nagios2::service { "check_ntp": }
 
+			bind::a2 {
+				"ntp::time.${fqdn}":
+					rrname => 'time',
+					domain => $domain,
+					ip => $ipaddress,
+			}
 		}
 	}
 
