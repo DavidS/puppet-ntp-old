@@ -106,8 +106,7 @@ class ntp {
 	}
 
 	# collect all our configs
-	File <<| tag == 'ntp' |>>
-
+	Concatenated_file_part <<| tag == 'ntp' |>>
 
 	# private
 	define add_config($content, $type) {
