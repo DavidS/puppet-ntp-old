@@ -39,9 +39,12 @@ class ntp {
 	}
 
 	$ntps = gsub(split($configured_ntp_servers, " "), "(.+)", "ntp_\\1")
-	munin::plugin { $ntps:
-		ensure => "munin_plugin",
-		script_path => $ntp_base_dir
+	munin::plugin {
+		$ntps:
+			ensure => "munin_plugin",
+			script_path => $ntp_base_dir;
+		"ntp_states":
+			ensure => present;
 	}
 
 	case $ntp_servers { 
