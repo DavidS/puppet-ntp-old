@@ -2,12 +2,13 @@
 # Copyright (C) 2007 David Schmitt <david@schmitt.edv-bus.at>
 # See LICENSE for the full license granted to you.
 
-modules_dir { "ntp": }
 	
-$ntp_base_dir = "/var/lib/puppet/modules/ntp"
+$ntp_base_dir = "${module_dir_path}/ntp"
 $ntp_package = $lsbdistcodename ? { 'sarge' => 'ntp-server', default => 'ntp' }
 
 class ntp {
+
+	module_dir { "ntp": }
 
 	package {
 		$ntp_package:
@@ -52,13 +53,13 @@ class ntp {
 			info ( "${fqdn} will act as ntp client" )
 			# collect all our servers
 			concatenated_file { "/etc/ntp.client.conf":
-				dir => "/var/lib/puppet/modules/ntp/ntp.client.d",
+				dir => "${module_dir_path}/ntp/ntp.client.d",
 			}
 
 			# unused configs
-			file { "/var/lib/puppet/modules/ntp/ntp.server.d": ensure => directory, }
+			file { "${module_dir_path}/ntp/ntp.server.d": ensure => directory, }
 			# provide dummy dependency for collected files
-			exec { "concat_/var/lib/puppet/modules/ntp/ntp.server.d":
+			exec { "concat_${module_dir_path}/ntp/ntp.server.d":
 				command => "/bin/true",
 				refreshonly => true,
 			}
@@ -71,7 +72,7 @@ class ntp {
 			@@concatenated_file_part {
 				# export this server for our own clients
 				"server_${fqdn}":
-					dir => "/var/lib/puppet/modules/ntp/ntp.client.d",
+					dir => "${module_dir_path}/ntp/ntp.client.d",
 					content => "server ${fqdn} iburst\n",
 					tag => 'ntp',
 					## TODO: activate this dependency when the bug is fixed
@@ -79,7 +80,7 @@ class ntp {
 					;
 				# export this server for our other servers
 				"peer_${fqdn}":
-					dir => "/var/lib/puppet/modules/ntp/ntp.server.d",
+					dir => "${module_dir_path}/ntp/ntp.server.d",
 					content => "peer ${fqdn} iburst\nrestrict ${fqdn} nomodify notrap\n",
 					tag => 'ntp',
 					## TODO: activate this dependency when the bug is fixed
@@ -87,11 +88,11 @@ class ntp {
 					;
 			}
 			concatenated_file {"/etc/ntp.server.conf":
-				dir => "/var/lib/puppet/modules/ntp/ntp.server.d",
+				dir => "${module_dir_path}/ntp/ntp.server.d",
 			}
-			file { "/var/lib/puppet/modules/ntp/ntp.client.d": ensure => directory, }
+			file { "${module_dir_path}/ntp/ntp.client.d": ensure => directory, }
 			# provide dummy dependency for collected files
-			exec { "concat_/var/lib/puppet/modules/ntp/ntp.client.d":
+			exec { "concat_${module_dir_path}/ntp/ntp.client.d":
 				command => "/bin/true",
 				refreshonly => true,
 			}
@@ -114,7 +115,7 @@ class ntp {
 	# private
 	define add_config($content, $type) {
 
-		config_file { "/var/lib/puppet/modules/ntp/ntp.${type}.d/${name}":
+		config_file { "${module_dir_path}/ntp/ntp.${type}.d/${name}":
 			content => "$content\n",
 			before => File["/etc/ntp.${type}.conf"],
 		}
@@ -144,7 +145,7 @@ class ntp {
 			"ntp_${name_with_underscores}": ensure => absent;
 			"ntp_${name}":
 				ensure => "munin_plugin",
-				script_path => "/var/lib/puppet/modules/ntp"
+				script_path => "${module_dir_path}/ntp"
 				;
 		}
 	}
@@ -154,13 +155,13 @@ class ntp {
 # include this class on hosts who collect files but do not have other ntp infrastructure
 class ntp::none {
 	exec {
-		"concat_/var/lib/puppet/modules/ntp/ntp.client.d":
+		"concat_${module_dir_path}/ntp/ntp.client.d":
 			command => "/bin/true",
 			refreshonly => true;
-		"concat_/var/lib/puppet/modules/ntp/ntp.server.d":
+		"concat_${module_dir_path}/ntp/ntp.server.d":
 			command => "/bin/true",
 			refreshonly => true,
 	}
 	# also provide dummy directories!
-	modules_dir { ["ntp/ntp.server.d", "ntp/ntp.client.d"]: }
+	module_dir { [ "ntp", "ntp/ntp.server.d", "ntp/ntp.client.d" ]: }
 }
