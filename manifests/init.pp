@@ -74,7 +74,7 @@ class ntp {
 				"server_${fqdn}":
 					dir => "${module_dir_path}/ntp/ntp.client.d",
 					content => "server ${fqdn} iburst\n",
-					tag => 'ntp',
+					tag => 'ntp::configs',
 					## TODO: activate this dependency when the bug is fixed
 					#before => File["/etc/ntp.client.conf"]
 					;
@@ -82,7 +82,7 @@ class ntp {
 				"peer_${fqdn}":
 					dir => "${module_dir_path}/ntp/ntp.server.d",
 					content => "peer ${fqdn} iburst\nrestrict ${fqdn} nomodify notrap\n",
-					tag => 'ntp',
+					tag => 'ntp::configs',
 					## TODO: activate this dependency when the bug is fixed
 					#before => File["/etc/ntp.server.conf"]
 					;
@@ -110,7 +110,7 @@ class ntp {
 	}
 
 	# collect all our configs
-	Concatenated_file_part <<| tag == 'ntp' |>>
+	Concatenated_file_part <<| tag == 'ntp::configs' |>>
 
 	# private
 	define add_config($content, $type) {
