@@ -35,7 +35,7 @@ class ntp {
 	# various files and directories used by this module
 	file{
 		"${ntp_base_dir}/munin_plugin":
-			source => "puppet://$servername/ntp/ntp_",
+			source => "puppet:///modules/ntp/ntp_",
 			mode => 0755, owner => root, group => root;
 	}
 
